@@ -6,10 +6,15 @@ name = "pypi"
 [packages]
 pydantic = "*"
 fastapi = {extras = ["all"], version = "*"}
+python-multipart = "*"
+sqlalchemy = "*"
+path = "*"
+typer = "*"
 
 [dev-packages]
 uvicorn = "*"
 autopep8 = "*"
+mypy = "*"
 
 [requires]
 python_version = "3.11"
