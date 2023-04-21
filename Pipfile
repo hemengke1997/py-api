@@ -10,11 +10,15 @@ python-multipart = "*"
 sqlalchemy = "*"
 path = "*"
 typer = "*"
+asyncmy = "*"
+passlib = "*"
+loguru = "*"
 
 [dev-packages]
 uvicorn = "*"
-autopep8 = "*"
-mypy = "*"
+pylama = "*"
+pylint = "*"
+flake8 = "*"
 
 [requires]
 python_version = "3.11"

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.application import settings
+from src.application import settings, urls
 import typer
 import uvicorn
 
@@ -19,19 +19,14 @@ def create_app():
             allow_methods=settings.ALLOW_METHODS,
             allow_headers=settings.ALLOW_HEADERS,
         )
+    for url in urls.urlpatterns:
+        app.include_router(url["ApiRouter"], prefix=url["prefix"], tags=url["tags"])
+    return app
 
 
 @shell_app.command()
 def run(mode: str = typer.Argument("prod", help="运行环境")):
-    uvicorn.run("main:create_app", port=8888, factory=True, reload=(mode is "dev"))
-
-
-@shell_app.command()
-def goodbye(name: str, formal: bool = False):
-    if formal:
-        print(f"Goodbye Ms. {name}. Have a good day.")
-    else:
-        print(f"Bye {name}!")
+    uvicorn.run("main:create_app", port=8000, factory=True, reload=(mode == "dev"))
 
 
 if __name__ == "__main__":
