@@ -1,7 +1,9 @@
+from sqlalchemy import MetaData
 from src.application.settings import SQLALCHEMY_DATABASE_URL, SQLALCHEMY_DATABASE_TYPE
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declared_attr, declarative_base
+from sqlalchemy.ext.asyncio import async_sessionmaker
 
 
 def create_async_engine_session(database_url: str, database_type: str = "mysql"):
@@ -29,11 +31,9 @@ def create_async_engine_session(database_url: str, database_type: str = "mysql")
         pool_recycle=3600,
         future=True,
         max_overflow=5,
-        connect_args={"check_same_thread": False, "timeout": 30}
-        if database_type == "sqlite3"
-        else {},
+        connect_args={"check_same_thread": False, "timeout": 30} if database_type == "sqlite3" else {},
     )
-    return sessionmaker(
+    return async_sessionmaker(
         autocommit=False,
         autoflush=False,
         bind=engine,
@@ -65,15 +65,11 @@ class Base:
 """
 Model = declarative_base(name="Model", cls=Base)
 
+meta = MetaData()
+
 
 async def db_getter():
-    """
-    获取主数据库
-
-    数据库依赖项，它将在单个请求中使用，然后在请求完成后将其关闭。
-    """
-    async with create_async_engine_session(
-        SQLALCHEMY_DATABASE_URL, SQLALCHEMY_DATABASE_TYPE
-    )() as session:
+    async with create_async_engine_session(SQLALCHEMY_DATABASE_URL, SQLALCHEMY_DATABASE_TYPE)() as session:
         async with session.begin():
+            await session.run_sync(meta.create_all)
             yield session

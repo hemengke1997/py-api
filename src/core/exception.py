@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-# @version        : 1.0
-# @Creaet Time    : 2021/10/19 15:47
-# @File           : exception.py
-# @IDE            : PyCharm
-# @desc           : 全局异常处理
-
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.exceptions import RequestValidationError
@@ -59,9 +52,7 @@ def register_exception(app: FastAPI):
         )
 
     @app.exception_handler(RequestValidationError)
-    async def validation_exception_handler(
-        request: Request, exc: RequestValidationError
-    ):
+    async def validation_exception_handler(request: Request, exc: RequestValidationError):
         """
         重写请求验证异常处理器
         """
@@ -73,16 +64,14 @@ def register_exception(app: FastAPI):
             msg = "请求失败，缺少必填项！"
         elif msg == "value is not a valid list":
             print(exc.errors())
-            msg = f"类型错误，提交参数应该为列表！"
+            msg = "类型错误，提交参数应该为列表！"
         elif msg == "value is not a valid int":
-            msg = f"类型错误，提交参数应该为整数！"
+            msg = "类型错误，提交参数应该为整数！"
         elif msg == "value could not be parsed to a boolean":
-            msg = f"类型错误，提交参数应该为布尔值！"
+            msg = "类型错误，提交参数应该为布尔值！"
         return JSONResponse(
             status_code=200,
-            content=jsonable_encoder(
-                {"message": msg, "body": exc.body, "code": status.HTTP_400_BAD_REQUEST}
-            ),
+            content=jsonable_encoder({"message": msg, "body": exc.body, "code": status.HTTP_400_BAD_REQUEST}),
         )
 
     @app.exception_handler(ValueError)
@@ -95,9 +84,7 @@ def register_exception(app: FastAPI):
         print(exc.__str__())
         return JSONResponse(
             status_code=200,
-            content=jsonable_encoder(
-                {"message": exc.__str__(), "code": status.HTTP_400_BAD_REQUEST}
-            ),
+            content=jsonable_encoder({"message": exc.__str__(), "code": status.HTTP_400_BAD_REQUEST}),
         )
 
     @app.exception_handler(Exception)
@@ -109,7 +96,5 @@ def register_exception(app: FastAPI):
         logger.error(exc.__str__())
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content=jsonable_encoder(
-                {"message": "接口异常！", "code": status.HTTP_500_INTERNAL_SERVER_ERROR}
-            ),
+            content=jsonable_encoder({"message": "接口异常！", "code": status.HTTP_500_INTERNAL_SERVER_ERROR}),
         )

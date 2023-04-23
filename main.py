@@ -1,6 +1,8 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.application import settings, urls
+from src.application.env import Env, DEV
 import typer
 import uvicorn
 
@@ -21,12 +23,15 @@ def create_app():
         )
     for url in urls.urlpatterns:
         app.include_router(url["ApiRouter"], prefix=url["prefix"], tags=url["tags"])
+
     return app
 
 
 @shell_app.command()
-def run(mode: str = typer.Argument("prod", help="运行环境")):
-    uvicorn.run("main:create_app", port=8000, factory=True, reload=(mode == "dev"))
+def run(mode: str = typer.Option(DEV, help=f"运行环境，可传: {Env.get_formatted_env()}")):
+    os.environ["APP_ENV"] = mode
+    Env(mode)
+    uvicorn.run("main:create_app", port=8000, factory=True, reload=(mode == DEV))
 
 
 if __name__ == "__main__":

@@ -14,12 +14,11 @@ import datetime
 from typing import List, Set
 from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy import func, delete, update, or_
-from sqlalchemy.future import select
+from sqlalchemy import func, delete, select, update, or_
+from sqlalchemy.sql import Select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from src.core.exception import CustomException
-from sqlalchemy.sql.selectable import Select
 from typing import Any
 
 
@@ -27,9 +26,7 @@ class DalBase:
     # 倒叙
     ORDER_FIELD = ["desc", "descending"]
 
-    def __init__(
-        self, db: AsyncSession, model: Any, schema: Any, key_models: dict = None
-    ):
+    def __init__(self, db: AsyncSession, model: Any, schema: Any, key_models: dict = None):
         self.db = db
         self.model = model
         self.schema = schema
@@ -37,11 +34,11 @@ class DalBase:
 
     async def get_data(
         self,
-        data_id: int = None,
-        v_options: list = None,
-        v_join_query: dict = None,
-        v_or: List[tuple] = None,
-        v_order: str = None,
+        data_id: int | None = None,
+        v_options: list | None = None,
+        v_join_query: dict | None = None,
+        v_or: List[tuple] | None = None,
+        v_order: str | None = None,
         v_return_none: bool = False,
         v_schema: Any = None,
         **kwargs,
@@ -78,11 +75,11 @@ class DalBase:
         self,
         page: int = 1,
         limit: int = 10,
-        v_options: list = None,
-        v_join_query: dict = None,
-        v_or: List[tuple] = None,
-        v_order: str = None,
-        v_order_field: str = None,
+        v_options: list | None = None,
+        v_join_query: dict | None = None,
+        v_or: List[tuple] | None = None,
+        v_order: str | None = None,
+        v_order_field: str | None = None,
         v_return_objs: bool = False,
         v_start_sql: Any = None,
         v_schema: Any = None,
@@ -104,13 +101,9 @@ class DalBase:
         """
         if not isinstance(v_start_sql, Select):
             v_start_sql = select(self.model).where(self.model.is_delete == False)
-        sql = self.add_filter_condition(
-            v_start_sql, v_options, v_join_query, v_or, **kwargs
-        )
+        sql = self.add_filter_condition(v_start_sql, v_options, v_join_query, v_or, **kwargs)
         if v_order_field and (v_order in self.ORDER_FIELD):
-            sql = sql.order_by(
-                getattr(self.model, v_order_field).desc(), self.model.id.desc()
-            )
+            sql = sql.order_by(getattr(self.model, v_order_field).desc(), self.model.id.desc())
         elif v_order_field:
             sql = sql.order_by(getattr(self.model, v_order_field), self.model.id)
         elif v_order in self.ORDER_FIELD:
@@ -120,16 +113,13 @@ class DalBase:
         queryset = await self.db.execute(sql)
         if v_return_objs:
             return queryset.scalars().unique().all()
-        return [
-            await self.out_dict(i, v_schema=v_schema)
-            for i in queryset.scalars().unique().all()
-        ]
+        return [await self.out_dict(i, v_schema=v_schema) for i in queryset.scalars().unique().all()]
 
     async def get_count(
         self,
-        v_options: list = None,
-        v_join_query: dict = None,
-        v_or: List[tuple] = None,
+        v_options: list | None = None,
+        v_join_query: dict | None = None,
+        v_or: List[tuple] | None = None,
         **kwargs,
     ):
         """
@@ -140,17 +130,15 @@ class DalBase:
         :param v_or: 或逻辑查询
         :param kwargs: 查询参数
         """
-        sql = select(func.count(self.model.id).label("total")).where(
-            self.model.is_delete == False
-        )
+        sql = select(func.count(self.model.id).label("total")).where(self.model.is_delete == False)
         sql = self.add_filter_condition(sql, v_options, v_join_query, v_or, **kwargs)
         queryset = await self.db.execute(sql)
-        return queryset.one()["total"]
+        return queryset.one().count
 
     async def create_data(
         self,
         data,
-        v_options: list = None,
+        v_options: list | None = None,
         v_return_obj: bool = False,
         v_schema: Any = None,
     ):
@@ -172,7 +160,7 @@ class DalBase:
         self,
         data_id: int,
         data: Any,
-        v_options: list = None,
+        v_options: list | None = None,
         v_return_obj: bool = False,
         v_schema: Any = None,
     ):
@@ -203,9 +191,7 @@ class DalBase:
                 update(self.model)
                 .where(self.model.id.in_(ids))
                 .values(
-                    delete_datetime=datetime.datetime.now().strftime(
-                        "%Y-%m-%d %H:%M:%S"
-                    ),
+                    delete_datetime=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     is_delete=True,
                     **kwargs,
                 )
@@ -215,12 +201,12 @@ class DalBase:
 
     def add_filter_condition(
         self,
-        sql: select,
-        v_options: list = None,
-        v_join_query: dict = None,
-        v_or: List[tuple] = None,
+        sql: Select,
+        v_options: list | None = None,
+        v_join_query: dict | None = None,
+        v_or: List[tuple] | None = None,
         **kwargs,
-    ) -> select:
+    ) -> Select:
         """
         添加过滤条件，以及内连接过滤条件
         :param sql:
@@ -244,15 +230,11 @@ class DalBase:
         for item in v_join:
             foreign_key = self.key_models.get(item)
             # 当外键模型在查询模型中存在多个外键时，则需要添加onclause属性
-            sql = sql.join(
-                foreign_key.get("model"), onclause=foreign_key.get("onclause")
-            )
+            sql = sql.join(foreign_key.get("model"), onclause=foreign_key.get("onclause"))
         for item in v_join_left:
             foreign_key = self.key_models.get(item)
             # 当外键模型在查询模型中存在多个外键时，则需要添加onclause属性
-            sql = sql.outerjoin(
-                foreign_key.get("model"), onclause=foreign_key.get("onclause")
-            )
+            sql = sql.outerjoin(foreign_key.get("model"), onclause=foreign_key.get("onclause"))
         conditions = []
         self.__dict_filter(conditions, self.model, **kwargs)
         if conditions:
@@ -261,9 +243,7 @@ class DalBase:
             sql = sql.options(*[load for load in v_options])
         return sql
 
-    def __or_filter(
-        self, sql: select, v_or: List[tuple], v_join_left: Set[str], v_join: Set[str]
-    ):
+    def __or_filter(self, sql: Select, v_or: List[tuple], v_join_left: Set[str], v_join: Set[str]):
         """
         或逻辑操作
         :param sql:
@@ -313,9 +293,7 @@ class DalBase:
                     elif len(value) == 2 and value[1] not in [None, [], ""]:
                         if value[0] == "date":
                             # 根据日期查询， 关键函数是：func.time_format和func.date_format
-                            conditions.append(
-                                func.date_format(attr, "%Y-%m-%d") == value[1]
-                            )
+                            conditions.append(func.date_format(attr, "%Y-%m-%d") == value[1])
                         elif value[0] == "like":
                             conditions.append(attr.like(f"%{value[1]}%"))
                         elif value[0] == "in":
@@ -323,9 +301,7 @@ class DalBase:
                         elif value[0] == "between" and len(value[1]) == 2:
                             conditions.append(attr.between(value[1][0], value[1][1]))
                         elif value[0] == "month":
-                            conditions.append(
-                                func.date_format(attr, "%Y-%m") == value[1]
-                            )
+                            conditions.append(func.date_format(attr, "%Y-%m") == value[1])
                         elif value[0] == "!=":
                             conditions.append(attr != value[1])
                         elif value[0] == ">":
@@ -348,7 +324,7 @@ class DalBase:
     async def out_dict(
         self,
         obj: Any,
-        v_options: list = None,
+        v_options: list | None = None,
         v_return_obj: bool = False,
         v_schema: Any = None,
     ):

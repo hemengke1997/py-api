@@ -1,6 +1,5 @@
 from typing import List, Optional
 from pydantic import BaseModel
-
 from src.core.data_types import DatetimeStr, Email, Telephone
 from .role import RoleSimpleOut
 
@@ -15,6 +14,15 @@ class BaseUser(BaseModel):
     is_staff: Optional[bool] = False
     gender: Optional[str] = "0"
     is_wx_server_openid: Optional[bool] = False
+
+
+class UserIn(BaseUser):
+    """
+    创建用户
+    """
+
+    role_ids: Optional[List[int]] = []
+    password: Optional[str] = ""
 
 
 class UserSimpleOut(BaseUser):

@@ -13,12 +13,13 @@ typer = "*"
 asyncmy = "*"
 passlib = "*"
 loguru = "*"
+redis = "*"
+environs = "*"
+orjson = "*"
+pyjwt = "*"
 
 [dev-packages]
 uvicorn = "*"
-pylama = "*"
-pylint = "*"
-flake8 = "*"
 
 [requires]
 python_version = "3.11"
