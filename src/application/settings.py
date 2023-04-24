@@ -51,3 +51,6 @@ REFRESH_TOKEN_EXPIRE_MINUTES = 1440 * 2
 SECRET_KEY = "vgb0tnl9d58+6n-6h-ea&u^1#s0ccp!794=kbvqacjq75vzps$"
 """用于设定 JWT 令牌签名算法"""
 ALGORITHM = "HS256"
+
+
+VERSION = "1.0.0"

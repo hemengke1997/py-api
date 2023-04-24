@@ -1,3 +1,4 @@
+import os
 from sqlalchemy import Column, String
 from passlib.context import CryptContext
 from src.db.db_base import BaseModel
@@ -9,9 +10,7 @@ class VadminUser(BaseModel):
     __tablename__ = "vadmin_auth_user"
     __table_args__ = {"comment": "用户表"}
 
-    telephone = Column(
-        String(11), nullable=False, index=True, comment="手机号", unique=False
-    )
+    telephone = Column(String(11), nullable=False, index=True, comment="手机号", unique=False)
 
     email = Column(String(50), index=True, nullable=False, comment="邮箱地址")
 

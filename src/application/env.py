@@ -1,12 +1,12 @@
+from enum import Enum
 from dotenv import dotenv_values
 from os.path import join, dirname
 
 
-DEV = "dev"
-TEST = "test"
-PROD = "prod"
-
-env_tulpe = (DEV, TEST, PROD)
+class Environment(str, Enum):
+    DEV = "dev"
+    TEST = "test"
+    PROD = "prod"
 
 
 class Singleton(type):
@@ -30,7 +30,7 @@ class Env(metaclass=Singleton):
 
     @staticmethod
     def get_formatted_env() -> str:
-        return " | ".join(env_tulpe)
+        return " | ".join(Environment)
 
     @staticmethod
     def set_config(c):
